@@ -488,6 +488,36 @@ impl DownloadCache {
         Ok(())
     }
 
+    /// Remove a cached download by video ID and format ID.
+    ///
+    /// Finds the entry, deletes the file from disk, and removes it from both cache layers.
+    ///
+    /// # Arguments
+    ///
+    /// * `video_id` - The video identifier.
+    /// * `format_id` - The format identifier.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the removal operation fails.
+    pub async fn remove_by_video_and_format(&self, video_id: &str, format_id: &str) -> Result<()> {
+        tracing::debug!(
+            video_id = video_id,
+            format_id = format_id,
+            "⚙️ Removing cached download by video+format"
+        );
+
+        if let Some((cached, cached_path)) = self
+            .get_by_video_and_format(video_id, format_id)
+            .await?
+        {
+            let _ = tokio::fs::remove_file(&cached_path).await;
+            self.remove(&cached.id).await?;
+        }
+
+        Ok(())
+    }
+
     /// Clean expired entries (both layers).
     ///
     /// # Errors

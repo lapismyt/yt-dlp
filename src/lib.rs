@@ -557,6 +557,25 @@ impl Downloader {
         self.cache.as_ref()
     }
 
+    /// Invalidate a cached download by video ID and format ID.
+    ///
+    /// Removes the entry from both L1 (memory) and L2 (persistent) caches,
+    /// and deletes the cached file from disk.
+    ///
+    /// # Arguments
+    ///
+    /// * `video_id` - The video identifier.
+    /// * `format_id` - The format identifier.
+    #[cfg(cache)]
+    pub async fn invalidate_download_cache(&self, video_id: &str, format_id: &str) {
+        if let Some(cache) = &self.cache {
+            let _ = cache
+                .downloads
+                .remove_by_video_and_format(video_id, format_id)
+                .await;
+        }
+    }
+
     /// Returns a reference to the download manager.
     ///
     /// # Returns
