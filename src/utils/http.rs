@@ -25,6 +25,8 @@ const DEFAULT_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Appl
 #[derive(Debug, Clone, Default)]
 pub struct HttpClientConfig<'a> {
     pub proxy: Option<&'a ProxyConfig>,
+    /// Local address to bind connections to (equivalent to yt-dlp's `--source-address`).
+    pub source_address: Option<std::net::IpAddr>,
     pub timeout: Option<Duration>,
     pub user_agent: Option<String>,
     pub default_headers: Option<HeaderMap>,
@@ -35,8 +37,10 @@ impl fmt::Display for HttpClientConfig<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "HttpClientConfig(proxy={}, timeout={}, http2={})",
+            "HttpClientConfig(proxy={}, source_address={}, timeout={}, http2={})",
             self.proxy.is_some(),
+            self.source_address
+                .map_or("default".to_string(), |addr| addr.to_string()),
             self.timeout
                 .map_or("default".to_string(), |d| format!("{}s", d.as_secs())),
             self.http2_adaptive_window
@@ -62,6 +66,7 @@ pub fn build_http_client(config: HttpClientConfig) -> crate::error::Result<Arc<C
 
     tracing::debug!(
         has_proxy = config.proxy.is_some(),
+        source_address = ?config.source_address,
         timeout_secs = timeout.as_secs(),
         pool_idle_timeout_secs = HTTP_POOL_IDLE_TIMEOUT_SECS,
         max_idle_per_host = HTTP_POOL_MAX_IDLE_PER_HOST,
@@ -96,6 +101,11 @@ pub fn build_http_client(config: HttpClientConfig) -> crate::error::Result<Arc<C
                 tracing::warn!(error = %e, "Proxy configuration failed — client will connect directly without proxy");
             }
         }
+    }
+
+    if let Some(source_address) = config.source_address {
+        tracing::info!(source_address = %source_address, "⚙️ Binding HTTP client to source address");
+        builder = builder.local_address(source_address);
     }
 
     let client = builder.build()?;

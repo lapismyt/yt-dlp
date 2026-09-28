@@ -89,7 +89,7 @@ impl Downloader {
         tracing::debug!(url = subtitle.url, path = ?output_path, "💬 Downloading subtitle file");
 
         // Download the subtitle file
-        let fetcher = Fetcher::new(&subtitle.url, self.proxy.as_ref(), None)?;
+        let fetcher = Fetcher::new_bound(&subtitle.url, self.proxy.as_ref(), None, self.source_address)?;
         fetcher.fetch_asset(&output_path).await?;
 
         // Cache the downloaded subtitle
@@ -185,7 +185,7 @@ impl Downloader {
                 "💬 Downloading subtitle/caption"
             );
 
-            let fetcher = Fetcher::new(&subtitle.url, self.proxy.as_ref(), None)?;
+            let fetcher = Fetcher::new_bound(&subtitle.url, self.proxy.as_ref(), None, self.source_address)?;
             fetcher.fetch_asset(&output_path).await?;
             downloaded_files.push(output_path);
         }

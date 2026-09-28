@@ -45,6 +45,7 @@ pub struct DownloaderBuilder {
     user_agent: Option<String>,
     timeout: Duration,
     proxy: Option<ProxyConfig>,
+    source_address: Option<std::net::IpAddr>,
     cookies: Option<PathBuf>,
     cookies_from_browser: Option<String>,
     use_netrc: bool,
@@ -76,6 +77,7 @@ impl DownloaderBuilder {
             user_agent: None,
             timeout: crate::client::DEFAULT_TIMEOUT,
             proxy: None,
+            source_address: None,
             cookies: None,
             cookies_from_browser: None,
             use_netrc: false,
@@ -140,6 +142,24 @@ impl DownloaderBuilder {
         );
 
         self.proxy = Some(proxy);
+        self
+    }
+
+    /// Bind outgoing connections of the built-in HTTP client to a local address.
+    ///
+    /// This is the equivalent of yt-dlp's `--source-address` option for downloads
+    /// performed natively by this library (media formats, thumbnails, subtitles).
+    /// Extractor invocations of the yt-dlp binary are not affected — pass
+    /// `--source-address=<ip>` to them separately so that both halves of a
+    /// download leave from the same address.
+    ///
+    /// # Arguments
+    ///
+    /// * `source_address` - The local IP address to bind to
+    pub fn with_source_address(mut self, source_address: std::net::IpAddr) -> Self {
+        tracing::debug!(source_address = %source_address, "🔧 Setting source address");
+
+        self.source_address = Some(source_address);
         self
     }
 
@@ -347,6 +367,7 @@ impl DownloaderBuilder {
         // Create download manager with proxy configuration and event bus
         let download_manager = if let Some(mut config) = self.download_manager_config {
             config.proxy = self.proxy.clone();
+            config.source_address = self.source_address;
             Arc::new(DownloadManager::with_config_and_event_bus(
                 config,
                 Some(event_bus.clone()),
@@ -354,6 +375,7 @@ impl DownloaderBuilder {
         } else {
             let config = ManagerConfig {
                 proxy: self.proxy.clone(),
+                source_address: self.source_address,
                 ..Default::default()
             };
             Arc::new(DownloadManager::with_config_and_event_bus(
@@ -414,6 +436,7 @@ impl DownloaderBuilder {
             user_agent: self.user_agent,
             timeout: self.timeout,
             proxy: self.proxy,
+            source_address: self.source_address,
             #[cfg(cache)]
             cache,
             download_manager,

@@ -246,6 +246,7 @@ impl Downloader {
 
         let client = crate::utils::http::build_http_client(crate::utils::http::HttpClientConfig {
             proxy: self.proxy.as_ref(),
+            source_address: self.source_address,
             timeout: Some(self.timeout),
             user_agent: self.user_agent.clone(),
             ..Default::default()

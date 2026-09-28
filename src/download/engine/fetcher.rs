@@ -116,10 +116,34 @@ impl Fetcher {
     /// * `proxy` - Optional proxy configuration
     /// * `http_headers` - Optional HTTP headers
     pub fn new(url: impl AsRef<str>, proxy: Option<&ProxyConfig>, http_headers: Option<HttpHeaders>) -> Result<Self> {
+        Self::new_bound(url, proxy, http_headers, None)
+    }
+
+    /// Creates a new fetcher whose connections are bound to a local source address.
+    ///
+    /// Same as [`Fetcher::new`], but the underlying HTTP client binds every outgoing
+    /// connection to `source_address` (the native equivalent of yt-dlp's
+    /// `--source-address`). This matters for services that sign their download URLs
+    /// with the requester's IP address — the request must leave from the same
+    /// address that extracted the URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL from which to download the data.
+    /// * `proxy` - Optional proxy configuration
+    /// * `http_headers` - Optional HTTP headers
+    /// * `source_address` - Optional local address to bind connections to
+    pub fn new_bound(
+        url: impl AsRef<str>,
+        proxy: Option<&ProxyConfig>,
+        http_headers: Option<HttpHeaders>,
+        source_address: Option<std::net::IpAddr>,
+    ) -> Result<Self> {
         tracing::debug!(
             url = %url.as_ref(),
             has_proxy = proxy.is_some(),
             has_headers = http_headers.is_some(),
+            source_address = ?source_address,
             "⚙️ Creating fetcher"
         );
 
@@ -130,6 +154,7 @@ impl Fetcher {
 
         let client = crate::utils::http::build_http_client(crate::utils::http::HttpClientConfig {
             proxy,
+            source_address,
             user_agent,
             default_headers,
             http2_adaptive_window: true,

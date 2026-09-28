@@ -153,6 +153,9 @@ pub struct ManagerConfig {
     /// Optional proxy configuration
     #[builder(default)]
     pub proxy: Option<ProxyConfig>,
+    /// Local address to bind connections to (equivalent to yt-dlp's `--source-address`)
+    #[builder(default)]
+    pub source_address: Option<std::net::IpAddr>,
     /// Speed profile for automatic optimization
     #[builder(default)]
     pub speed_profile: SpeedProfile,
@@ -182,6 +185,7 @@ impl ManagerConfig {
             retry_attempts: DEFAULT_RETRY_ATTEMPTS,
             max_buffer_size: profile.max_buffer_size(),
             proxy: None,
+            source_address: None,
             speed_profile: profile,
             cleanup_threshold: DEFAULT_CLEANUP_THRESHOLD,
             user_agent: None,

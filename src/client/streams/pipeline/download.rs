@@ -330,7 +330,7 @@ impl Downloader {
         })?;
 
         // Create an optimized fetcher with parallel downloading, driven by the configured SpeedProfile
-        let fetcher = Fetcher::new(&url, self.proxy.as_ref(), None)?
+        let fetcher = Fetcher::new_bound(&url, self.proxy.as_ref(), None, self.source_address)?
             .with_parallel_segments(self.download_manager.parallel_segments())
             .with_segment_size(self.download_manager.segment_size())
             .with_retry_attempts(self.download_manager.retry_attempts());

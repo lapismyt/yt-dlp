@@ -176,6 +176,9 @@ pub struct Downloader {
     pub(crate) timeout: Duration,
     /// Optional proxy configuration for HTTP requests and yt-dlp.
     pub(crate) proxy: Option<client::proxy::ProxyConfig>,
+    /// Optional local address bound by the built-in HTTP client
+    /// (native equivalent of yt-dlp's `--source-address`).
+    pub(crate) source_address: Option<std::net::IpAddr>,
     /// The unified cache layer (videos, downloads, playlists).
     #[cfg(cache)]
     pub(crate) cache: Option<Arc<CacheLayer>>,
@@ -942,6 +945,7 @@ impl Clone for Downloader {
             user_agent: self.user_agent.clone(),
             timeout: self.timeout,
             proxy: self.proxy.clone(),
+            source_address: self.source_address,
             #[cfg(cache)]
             cache: self.cache.clone(),
             download_manager: self.download_manager.clone(),

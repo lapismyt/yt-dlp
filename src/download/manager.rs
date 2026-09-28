@@ -147,6 +147,7 @@ impl DownloadManager {
 
         let http_config = crate::utils::http::HttpClientConfig {
             proxy: config.proxy.as_ref(),
+            source_address: config.source_address,
             user_agent: config.user_agent.clone(),
             default_headers,
             http2_adaptive_window: true,
